@@ -1,0 +1,208 @@
+<![CDATA[<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Special Opperations Command Center</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body { 
+      padding-top: 70px; 
+      background-color: #343a40; 
+      color: #ffffff; 
+    }
+    a, a:hover {
+      color: #61dafb;
+    }
+    .navbar, .dropdown-menu {
+      background-color: #212529 !important;
+    }
+    .dropdown-item {
+      color: #ffffff;
+    }
+    .dropdown-item:hover {
+      background-color: #495057 !important;
+      color: #ffffff;
+    }
+    .table {
+      color: #ffffff;
+    }
+    .table thead th {
+      border-bottom: 2px solid #dee2e6;
+    }
+    .jumbotron {
+      background-color: #495057;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="/">POPs Command Center</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav mr-auto">
+        <!-- Tools Dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" data-toggle="dropdown">
+            Tools
+          </a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="{{ url_for('new_ideas_merge_review') }}">New Ideas Merge Review</a>
+            <a class="dropdown-item" href="#">Ideas to RMF Review</a>
+            <a class="dropdown-item" href="{{ url_for('production_support_triage') }}">Production Support Triage</a>
+          </div>
+        </li>
+        <!-- Credentials Dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="credentialsDropdown" data-toggle="dropdown">
+            Credentials
+          </a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#jiraModal">Jira</a>
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#ahaModal">Aha</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Jira Modal -->
+  <div class="modal fade" id="jiraModal" tabindex="-1" role="dialog" aria-labelledby="jiraModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="jiraModalLabel">Jira Credentials</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="jiraForm">
+            <div class="form-group">
+              <label for="jiraUrl">Jira URL</label>
+              <input type="text" class="form-control" id="jiraUrl" placeholder="Enter Jira URL">
+            </div>
+            <div class="form-group">
+              <label for="jiraUser">Username</label>
+              <input type="text" class="form-control" id="jiraUser" placeholder="Enter Username">
+            </div>
+            <div class="form-group">
+              <label for="jiraToken">API Token</label>
+              <input type="password" class="form-control" id="jiraToken" placeholder="Enter API Token">
+            </div>
+          </form>
+          <div id="jiraStatus" class="text-success"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="loadCreds('jira')">Load Credentials</button>
+          <button type="button" class="btn btn-primary" onclick="saveCreds('jira')">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aha Modal -->
+  <div class="modal fade" id="ahaModal" tabindex="-1" role="dialog" aria-labelledby="ahaModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ahaModalLabel">Aha Credentials</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="ahaForm">
+            <div class="form-group">
+              <label for="ahaUrl">Aha URL</label>
+              <input type="text" class="form-control" id="ahaUrl" placeholder="Enter Aha URL">
+            </div>
+            <div class="form-group">
+              <label for="ahaUser">Username</label>
+              <input type="text" class="form-control" id="ahaUser" placeholder="Enter Username">
+            </div>
+            <div class="form-group">
+              <label for="ahaToken">API Token</label>
+              <input type="password" class="form-control" id="ahaToken" placeholder="Enter API Token">
+            </div>
+          </form>
+          <div id="ahaStatus" class="text-success"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="loadCreds('aha')">Load Credentials</button>
+          <button type="button" class="btn btn-primary" onclick="saveCreds('aha')">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Required JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  
+  <!-- Custom JavaScript for handling credentials -->
+  <script>
+    function saveCreds(provider) {
+      let data = {};
+      if(provider === 'jira') {
+        data.url = document.getElementById("jiraUrl").value;
+        data.username = document.getElementById("jiraUser").value;
+        data.token = document.getElementById("jiraToken").value;
+      } else if(provider === 'aha') {
+        data.url = document.getElementById("ahaUrl").value;
+        data.username = document.getElementById("ahaUser").value;
+        data.token = document.getElementById("ahaToken").value;
+      }
+      fetch("/save_creds/" + provider, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(provider === 'jira') {
+          document.getElementById("jiraStatus").innerText = data.status || data.error;
+        } else {
+          document.getElementById("ahaStatus").innerText = data.status || data.error;
+        }
+      });
+    }
+    
+    function loadCreds(provider) {
+      fetch("/load_creds/" + provider)
+      .then(response => response.json())
+      .then(data => {
+        if(provider === 'jira') {
+          if(data.error) {
+            document.getElementById("jiraStatus").innerText = data.error;
+          } else {
+            document.getElementById("jiraUrl").value = data.url || "";
+            document.getElementById("jiraUser").value = data.username || "";
+            document.getElementById("jiraToken").value = data.token || "";
+            document.getElementById("jiraStatus").innerText = "Credentials loaded";
+          }
+        } else {
+          if(data.error) {
+            document.getElementById("ahaStatus").innerText = data.error;
+          } else {
+            document.getElementById("ahaUrl").value = data.url || "";
+            document.getElementById("ahaUser").value = data.username || "";
+            document.getElementById("ahaToken").value = data.token || "";
+            document.getElementById("ahaStatus").innerText = "Credentials loaded";
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

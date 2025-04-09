@@ -1,0 +1,85 @@
+<![CDATA[{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Production Support Triage</h2>
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="ticketsFile">Upload CSV of Tickets</label>
+      <input type="file" class="form-control-file" id="ticketsFile" name="tickets_file" required>
+    </div>
+    <div class="form-group">
+      <label for="threshold">Confidence Threshold</label>
+      <input type="number" step="0.01" class="form-control" id="threshold" name="threshold" value="0.85" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Analyze</button>
+  </form>
+  
+  {% if recommendations %}
+  <hr>
+  <h3 class="mt-4">Recommendations</h3>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Open Ticket</th>
+        <th>Recommended Ticket</th>
+        <th>Similarity Score</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for rec in recommendations %}
+      <tr id="row-{{ loop.index }}">
+        <td>
+          <a href="https://zentrust.atlassian.net/browse/{{ rec['Ticket ID']|escape }}" target="_blank">
+            {{ rec['Ticket ID'] }}
+          </a>
+        </td>
+        <td>
+          <a href="https://zentrust.atlassian.net/browse/{{ rec['Recommended Ticket']|escape }}" target="_blank">
+            {{ rec['Recommended Ticket'] }}
+          </a>
+        </td>
+        <td>{{ rec['Similarity Score']|round(4) }}</td>
+        <td>
+          <button class="btn btn-success btn-sm support-approve-btn" data-ticket="{{ rec['Ticket ID']|escape }}" data-candidate="{{ rec['Recommended Ticket']|escape }}">
+            Approve
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const buttons = document.querySelectorAll(".support-approve-btn");
+  buttons.forEach(function(btn) {
+    btn.addEventListener("click", function(){
+      const ticket = btn.getAttribute("data-ticket");
+      const candidate = btn.getAttribute("data-candidate");
+      if (!confirm(`Are you sure you want to merge ${ticket} into ${candidate}?`)) {
+        return;
+      }
+      fetch("/merge_support", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ ticket_id: ticket, candidate_id: candidate })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+        btn.disabled = true;
+        btn.innerText = "Merged";
+      })
+      .catch(err => {
+        console.error(err);
+        alert("An error occurred while merging.");
+      });
+    });
+  });
+});
+</script>
+{% endblock %}
+]]>
